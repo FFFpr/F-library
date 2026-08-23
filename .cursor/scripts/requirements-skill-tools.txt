@@ -1,0 +1,6 @@
+# Packages required by .cursor/skills (cloud Build + local reuse).
+# ocr-scanned-pdf / book-summarizer: PDF text layer + scanned-page OCR
+pymupdf==1.28.2
+rapidocr-onnxruntime==1.2.3
+# book-summarizer: EPUB
+ebooklib==0.20

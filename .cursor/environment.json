@@ -1,0 +1,4 @@
+{
+  "name": "F-library",
+  "install": "bash .cursor/scripts/install-skill-tools.sh"
+}
