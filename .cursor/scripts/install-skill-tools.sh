@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Idempotent toolchain for F-library skills. Cloud Agents run this via
 # `.cursor/environment.json` `install` during each Build.
+# First step: git fetch + pull origin master so the snapshot is not stale.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -12,6 +13,42 @@ PYTHON3=python3
 log() { printf '[install-skill-tools] %s\n' "$*"; }
 
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
+
+# Network-sensitive git: 4 attempts, backoff 4s, 8s, 16s, 32s.
+git_retry() {
+  local attempt=1
+  local delay=4
+  while true; do
+    if "$@"; then
+      return 0
+    fi
+    if (( attempt >= 4 )); then
+      log "git failed after ${attempt} attempts: $*"
+      return 1
+    fi
+    log "git failed (attempt ${attempt}/4); retry in ${delay}s: $*"
+    sleep "${delay}"
+    attempt=$((attempt + 1))
+    delay=$((delay * 2))
+  done
+}
+
+update_git_master() {
+  if ! have_cmd git; then
+    log "git not found; cannot update master"
+    exit 1
+  fi
+  if ! git -C "${ROOT}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    log "not a git repo; skip master update"
+    return 0
+  fi
+
+  log "fetch origin master"
+  git_retry git -C "${ROOT}" fetch origin master
+  log "pull origin master"
+  git_retry git -C "${ROOT}" pull origin master
+  log "HEAD=$(git -C "${ROOT}" rev-parse --short HEAD) origin/master=$(git -C "${ROOT}" rev-parse --short origin/master)"
+}
 
 install_apt_packages() {
   if ! have_cmd apt-get; then
@@ -81,6 +118,7 @@ print("RapidOCR ready", type(ocr).__name__)
 PY
 }
 
+update_git_master
 install_apt_packages
 ensure_python
 ensure_venv
