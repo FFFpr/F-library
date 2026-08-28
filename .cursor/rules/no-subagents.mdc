@@ -1,0 +1,12 @@
+---
+description: 未经明确要求禁止启动子 agent
+alwaysApply: true
+---
+
+# 禁止启动子 agent
+
+未经用户明确要求，禁止启动任何子 agent，包括 Task、subagent，以及把任务委派给另一个 agent。
+
+任务缺信息、范围大、想并行、想让另一个 agent 去查，都不构成允许。
+
+仅当用户本条消息写明要启动子 agent 时，才可以启动，且只启动用户指定的那一次。
